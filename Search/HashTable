@@ -1,0 +1,89 @@
+//
+// Created by Only Blue on 2020/6/11.
+//
+
+#ifndef SEARCH_HASHTABLE_H
+#define SEARCH_HASHTABLE_H
+
+#include <iostream>
+#include <cmath>
+const int MAX_SIZE = 10000;
+
+typedef enum{EMPTY, ACTIVE, DELETED}HashCellStatus;
+
+template <typename T>
+struct HashCell {
+	T data;
+	HashCellStatus status;
+	explicit HashCell(T d = 0):data(d), status(EMPTY){}
+};
+
+template <typename T>
+class HashTable {
+private:
+	HashCell<T>* hashTable;
+	int capacity;
+	int size;
+public:
+	explicit HashTable(int size):size(size), capacity(nextPrim(size)) {hashTable = new HashCell<T>[nextPrim(size)]; }
+
+	~HashTable() {delete[] hashTable; }
+
+	void insert(int t);
+
+protected:
+	int nextPrim(int n);
+
+	int find(T data) const;
+
+	int hash(int key) const {return key % capacity; }
+};
+
+template <typename T>
+int HashTable<T>::nextPrim(int n) {
+	int p = (n % 2) ? n + 2 : n + 1; //从大于n的下一个奇数开始
+	int i;
+	while (p <= MAX_SIZE) {
+		for (i = (int) sqrt(p); i > 2; i--) {
+			if ((p % i) == 0)
+				break;
+		}
+		if (i == 2)
+			break; //说明是素数，结束
+		else
+			p += 2;
+	}
+	return p;
+}
+
+template <typename T>
+void HashTable<T>::insert(int t) {
+	if(find(t) >= 0)
+		return;
+	int addr = hash(t);
+	while(hashTable[addr].status != EMPTY) {
+		addr = hash(addr + 1);
+	}
+	hashTable[addr].data = t;
+	hashTable[addr].status = ACTIVE;
+	size++;
+}
+
+template<typename T>
+int HashTable<T>::find(T data) const {
+	int temp = data % capacity;
+	int t = temp;
+
+	while (hashTable[t].status == ACTIVE && hashTable[t].data == data) {
+		t = (t + 1) % capacity;
+		if (temp == t) {
+			return -1;
+		}
+	}
+	if (hashTable[t].status == ACTIVE) {
+		return t;
+	} else return -1;
+}
+
+
+#endif //SEARCH_HASHTABLE_H
